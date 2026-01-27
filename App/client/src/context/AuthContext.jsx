@@ -4,24 +4,46 @@ import api from '../api/axios';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // TEMPORARY BYPASS: Initialize with mock user directly
-  const [user, setUser] = useState({
-    id: 'mock-1',
-    name: 'Alex Johnson',
-    email: 'alex@insta.com',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    role: 'admin'
-  });
-  const [loading, setLoading] = useState(false); // No loading needed
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Optional: Still fetch real status if needed, but we start logged in
-    // checkAuthStatus();
+    checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
-    // Keep this empty or just return to prevent overriding the mock user
-    return;
+    try {
+      // 1. Check if we have a token in localStorage (fast check)
+      const token = localStorage.getItem('accessToken');
+      const storedUser = localStorage.getItem('user');
+
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // 2. If we have a user in storage, set it immediately for perceived performance
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+
+      // 3. Verify with backend (secure check)
+      const res = await api.get('/auth/me');
+      setUser(res.data.user);
+
+      // Update storage with fresh data
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      // If verification fails, clear everything
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const login = async (email, password) => {
@@ -48,6 +70,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       setUser(null);
+      // No need to set loading, instant redirect via ProtectedRoute
     }
   };
 
