@@ -3,11 +3,19 @@ import { useAuth } from '../../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '../../../components/ui/Toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+  // Fallback timeout to ensure UI shows even if video fails event
+  useState(() => {
+    const timer = setTimeout(() => setIsVideoLoaded(true), 3000); // 3s max wait
+    return () => clearTimeout(timer);
+  });
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -39,19 +47,40 @@ export default function Login() {
 
   return (
     <div className="relative w-full h-screen flex items-center justify-center lg:justify-end lg:pr-[29.5%] overflow-hidden font-sans">
+
+      {/* 🚀 Initial Loading Screen */}
+      <AnimatePresence>
+        {!isVideoLoaded && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute inset-0 z-50 bg-white flex flex-col items-center justify-center"
+          >
+            <Loader2 className="animate-spin text-blue-500 mb-4" size={48} />
+            <p className="text-gray-500 font-medium tracking-wide">Initializing Nexus...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Video */}
       <video
         autoPlay
         muted
         loop
         playsInline
+        preload="auto"
+        onCanPlayThrough={() => setIsVideoLoaded(true)}
         className="absolute top-0 left-0 w-full h-full object-cover -z-10"
       >
-        <source src={`/assets/login-bg-final.mp4?v=${new Date().getTime()}`} type="video/mp4" />
+        <source src="/assets/login-bg-final.mp4" type="video/mp4" />
       </video>
 
-      {/* Login Card */}
-      <div
+      {/* Login Card - Animated Entrance */}
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        animate={isVideoLoaded ? { opacity: 1, y: 0, scale: 1 } : {}}
+        transition={{ delay: 0.4, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-[420px] bg-white/60 backdrop-blur-xl p-10 rounded-[30px] shadow-2xl text-center flex flex-col items-center"
       >
         {/* Title */}
@@ -100,7 +129,7 @@ export default function Login() {
         <p className="mt-8 text-[0.9rem] text-[#666]">
           Don't have an account? <Link to="/register" className="text-[#3b82f6] font-bold hover:underline ml-1">Sign Up</Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
