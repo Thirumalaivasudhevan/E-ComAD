@@ -24,6 +24,7 @@
     "helmet": "^8.1.0",
     "ioredis": "^5.9.2",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.1.5",
     "morgan": "^1.10.0",
     "nodemailer": "^7.0.12",
     "redis": "^5.10.0",

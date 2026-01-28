@@ -24,6 +24,7 @@ const cartRoutes = require('./routes/cart');
 const wishlistRoutes = require('./routes/wishlist');
 const orderRoutes = require('./routes/orders');
 const dashboardRoutes = require('./routes/dashboard');
+const mongoRoutes = require('./routes/mongo');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -52,6 +53,9 @@ app.use(compression());
 
 // Logger
 app.use(morgan('dev'));
+
+// MongoDB Test Route (Public)
+app.use('/api', mongoRoutes);
 
 // Apply API Key security to all API routes
 app.use('/api', apiKeyMiddleware);
